@@ -1,0 +1,57 @@
+flowchart TD
+    %% Main components
+    User[User/Client] --> CLI[Command Line Interface]
+    CLI --> Config[Configuration Loader]
+    
+    %% Configuration
+    Config --> Sources[Sources Config]
+    Config --> AppConfig[App Settings]
+    
+    %% Core components
+    AppConfig --> Coordinator[Coordinator]
+    Sources --> Coordinator
+    
+    %% Coordinator manages everything
+    Coordinator --> FetcherPool[Fetcher Worker Pool]
+    FetcherPool --> |HTTP Requests| Web[(Web Sources)]
+    Web --> |HTTP Responses| FetcherPool
+    
+    %% Fetcher details
+    FetcherPool --> RobotsCache{Robots.txt Cache}
+    FetcherPool --> RateLimiter{Rate Limiter}
+    RateLimiter --> DomainBuckets[Per-Domain Rate Buckets]
+    
+    %% Processing pipeline
+    FetcherPool --> |Raw Content| ParserPool[Parser Worker Pool]
+    ParserPool --> |Parsed Data| Normalizer[Data Normalizer]
+    Normalizer --> |Normalized Data| Aggregator[Result Aggregator]
+    
+    %% Results handling
+    Aggregator --> OutputHandler[Output Handler]
+    OutputHandler --> |File Output| FileSystem[(File System)]
+    OutputHandler --> |API Response| API[API Service]
+    OutputHandler --> |UI Display| WebUI[Web Interface]
+    
+    %% Context propagation
+    User --> |Cancellation| Context[Context]
+    Context --> Coordinator
+    Context -.-> FetcherPool
+    Context -.-> ParserPool
+    
+    %% Error handling
+    FetcherPool --> |Errors| ErrorHandler[Error Handler]
+    ParserPool --> |Errors| ErrorHandler
+    ErrorHandler --> Retry{Retry?}
+    Retry --> |Yes| FetcherPool
+    Retry --> |No| ErrorLog[(Error Log)]
+    
+    %% Legend and styling
+    classDef core fill:#f9f,stroke:#333,stroke-width:2px
+    classDef pool fill:#bbf,stroke:#33f,stroke-width:2px
+    classDef data fill:#dfd,stroke:#3a3,stroke-width:1px
+    classDef interface fill:#ffd,stroke:#aa3,stroke-width:1px
+    
+    class Coordinator,Aggregator core
+    class FetcherPool,ParserPool,Normalizer pool
+    class Sources,AppConfig,DomainBuckets data
+    class CLI,WebUI,API interface
