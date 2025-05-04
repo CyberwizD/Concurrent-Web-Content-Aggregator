@@ -1,0 +1,68 @@
+# Global application configuration
+
+app:
+  # Concurrency settings
+  concurrency:
+    max_fetchers: 10       # Maximum number of concurrent HTTP fetchers
+    max_parsers: 5         # Maximum number of concurrent content parsers
+  
+  # Timeout settings
+  timeouts:
+    request: 10s           # Maximum time for an individual HTTP request
+    connection: 5s         # TCP connection timeout
+    total: 5m              # Maximum total time for the entire aggregation process
+  
+  # Retry settings
+  retry:
+    max_attempts: 3        # Maximum number of retry attempts for failed requests
+    backoff_initial: 1s    # Initial delay before first retry
+    backoff_factor: 2.0    # Exponential backoff factor
+    backoff_max: 30s       # Maximum backoff time regardless of factor
+  
+  # HTTP settings
+  http:
+    user_agent: "ContentAggregator/1.0"  # User agent string
+    follow_redirects: true               # Whether to follow HTTP redirects
+    max_redirects: 5                     # Maximum number of redirects to follow
+  
+  # Output settings
+  output:
+    format: json           # Output format (json, csv, html)
+    destination: file      # Output destination (file, stdout, api)
+    file_path: "./output/results.json"  # Output file path if destination is file
+    pretty_print: true     # Whether to format JSON output for readability
+  
+  # Logging settings
+  logging:
+    level: info            # Logging level (debug, info, warn, error)
+    format: text           # Log format (text, json)
+    file: "./logs/aggregator.log"  # Log file path (empty for stdout)
+
+# Web interface settings
+web:
+  enabled: false           # Whether to enable the web interface
+  port: 8080               # Port for the web server
+  host: "0.0.0.0"          # Host address to bind
+  static_dir: "./web/static"  # Directory for static assets
+  template_dir: "./web/templates"  # Directory for HTML templates
+
+# API settings
+api:
+  enabled: false           # Whether to enable the API server
+  port: 8080               # Port for the API server
+  host: "0.0.0.0"          # Host address to bind
+  rate_limit:              # API rate limiting
+    requests_per_minute: 60
+    burst: 10
+
+# Storage settings (optional)
+storage:
+  type: memory             # Storage type (memory, file, redis)
+  cache_ttl: 1h            # Time-to-live for cached data
+  # Redis settings if storage type is redis
+  redis:
+    host: "localhost"
+    port: 6379
+    password: ""
+    db: 0
+    
