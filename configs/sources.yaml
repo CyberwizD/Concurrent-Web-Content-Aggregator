@@ -1,0 +1,135 @@
+# Content sources configuration
+
+sources:
+  # News website example
+  - name: tech_news
+    url: "https://example-tech-news.com/latest"
+    enabled: true
+    rate_limit:
+      requests_per_minute: 30
+      respect_robots_txt: true
+    parser: html
+    selectors:
+      container: "article.news-item"
+      title: "h2.headline"
+      content: "div.article-summary"
+      date: "span.publish-date"
+      author: "span.author"
+      category: "span.category"
+      url: "a.read-more"
+    headers:
+      Accept: "text/html,application/xhtml+xml"
+      Accept-Language: "en-US,en;q=0.9"
+  
+  # Blog example
+  - name: tech_blog
+    url: "https://example-tech-blog.com/feed"
+    enabled: true
+    rate_limit:
+      requests_per_minute: 20
+      respect_robots_txt: true
+    parser: rss
+    mappings:
+      title: "title"
+      content: "description"
+      date: "pubDate"
+      author: "author"
+      category: "category"
+      url: "link"
+    headers:
+      Accept: "application/rss+xml,application/xml"
+  
+  # JSON API example
+  - name: product_api
+    url: "https://example-product-api.com/v1/products"
+    enabled: true
+    rate_limit:
+      requests_per_minute: 60
+      respect_robots_txt: false
+    parser: json
+    mappings:
+      container: "products"
+      title: "name"
+      content: "description"
+      date: "createdAt"
+      category: "category"
+      url: "productUrl"
+      price: "price"
+    headers:
+      Accept: "application/json"
+      Authorization: "Bearer ${API_KEY}"
+  
+  # Pagination example
+  - name: paginated_content
+    url: "https://example-paginated.com/articles?page=${page}"
+    enabled: true
+    pagination:
+      enabled: true
+      start_page: 1
+      max_pages: 5
+      param_name: "page"
+    rate_limit:
+      requests_per_minute: 15
+      respect_robots_txt: true
+    parser: html
+    selectors:
+      container: "div.article"
+      title: "h3.title"
+      content: "p.excerpt"
+      date: "span.date"
+      url: "a.link"
+    headers:
+      Accept: "text/html"
+  
+  # Sitemap example
+  - name: sitemap_based
+    url: "https://example-sitemap.com/sitemap.xml"
+    enabled: true
+    sitemap:
+      enabled: true
+      process_all: false
+      max_urls: 100
+      pattern: ".*article.*"
+    rate_limit:
+      requests_per_minute: 10
+      respect_robots_txt: true
+    parser: html
+    selectors:
+      title: "h1.title"
+      content: "div.content"
+      date: "time.published"
+      author: "span.author"
+    headers:
+      Accept: "text/html"
+
+# Global filters applied to all sources
+filters:
+  date:
+    after: "2023-01-01T00:00:00Z"
+    before: ""  # Empty means no upper bound
+  keywords:
+    include:
+      - technology
+      - programming
+      - golang
+    exclude:
+      - advertisement
+      - sponsored
+  
+# Normalization rules
+normalization:
+  title:
+    trim: true
+    max_length: 100
+  content:
+    trim: true
+    max_length: 1000
+    strip_html: true
+  date:
+    format: "2006-01-02T15:04:05Z07:00"  # Go time format
+  categories:
+    lowercase: true
+    replace:
+      "tech": "technology"
+      "prog": "programming"
+      
