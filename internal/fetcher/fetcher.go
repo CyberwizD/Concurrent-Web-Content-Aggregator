@@ -121,7 +121,7 @@ func (f *Fetcher) Fetch(ctx context.Context, source *model.Source) (*model.Conte
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return nil, fmt.Errof("failed to read response body: %w", err)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	return &content{
@@ -143,4 +143,55 @@ func (f *Fetcher) checkRobotsTxt(ctx context.Context, parsedURL *url.URL, source
 	// Check cache first
 	f.robotsMu.RLock()
 	robotsData, exists := f.robotsCache[host]
+	f.robotsMu.RUnlock()
+
+	if !exists {
+		// Fetch robots.txt
+		req, err := http.NewRequestWithContext(ctx, "GET", robotsURL, nil)
+
+		if err != nil {
+			return true, fmt.Errorf("failed to create robots.txt request: %w", err)
+		}
+
+		// Set headers
+		req.Header.Set("User-Agent", config.App.HTTP.UserAgent)
+
+		// Execute request
+		resp, err := f.client.Do(req)
+
+		if err != nil {
+			return true, fmt.Errorf("robots.txt request failed: %w", err)
+		}
+
+		defer resp.Body.Close()
+
+		// Check status code if robots.txt not found or error, allow access
+		if resp.StatusCode >= 400 {
+			return true, nil
+		}
+
+		// Parse robots.txt
+		robotsTxt, err := robotstxt.FromResponse(resp)
+
+		if err != nil {
+			return true, fmt.Errorf("failed to parse robots.txt: %w", err)
+		}
+
+		// Cache the robots.txt data
+		f.robotsMu.RLock()
+		f.robotsCache[host] = robotsTxt
+		robotsData = robotsTxt
+		f.robotsMu.RUnlock()
+	}
+
+	// Check if URL is allowed
+	userAgent := f.App.HTTP.UserAgent
+	group := robotsData.FindGroup(userAgent)
+	path := parsedURL.Path
+
+	if path == "" {
+		path = "/"
+	}
+
+	return group.Test(path), nil
 }
