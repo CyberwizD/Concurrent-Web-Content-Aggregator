@@ -22,6 +22,7 @@ type RateLimiter struct {
 }
 
 type TokenBucket struct {
+	
 }
 
 func NewRateLimiter(cfg *config.Config) (*RateLimiter, error) {
