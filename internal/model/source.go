@@ -89,3 +89,42 @@ func (s *Source) GetURLWithPage(page int) string {
 
 	return baseURL.String()
 }
+
+// Validate checks if the source configuration is valid
+func (s *Source) Validate() error {
+	if s.Name == "" {
+		return fmt.Errorf("source name is required")
+	}
+
+	if s.URL == "" {
+		return fmt.Errorf("source URL is required")
+	}
+
+	// Check if URL is valid, allowing for template placeholders
+	_, err := ParseURL(s.URL)
+
+	if err != nil {
+		return fmt.Errorf("invalid URL '%s': %w", s.URL, err)
+	}
+
+	// Check if parser is specified
+	if s.Parser == "" {
+		return fmt.Errorf("parser type is required")
+	}
+
+	// Validate parser-specific settings
+	switch s.Parser {
+	case "html":
+		if len(s.Selector) == 0 {
+			return fmt.Errorf("HTML parser requires at least one selector")
+		}
+	case "json", "xml", "rss":
+		if len(s.Mapping) == 0 {
+			return fmt.Errorf("%s parser requires at least one mapping", strings.ToUpper(s.Parser))
+		}
+	default:
+		return fmt.Errorf("unsupported parser type '%s'", s.Parser)
+	}
+
+	return nil
+}
