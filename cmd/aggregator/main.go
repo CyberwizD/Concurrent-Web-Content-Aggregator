@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/aggregator"
-	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/coordinator"
+	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/aggregator"
+	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/coordinator"
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/pkg/config"
 )
 
