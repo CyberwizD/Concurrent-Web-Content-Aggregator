@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/aggregator"
@@ -109,10 +111,105 @@ func main() {
 }
 
 // Applies command-line flag overrides to the configuration
-func applyCommandLineOverrides(cfgs *config.Config) {
+func applyCommandLineOverrides(cfg *config.Config) {
 	// Output file override
 	if *outputFile != "" {
-		cfgs.App.Output.Destination = "file"
-		cfgs.App.Output.FilePath = "outputFile"
+		cfg.App.Output.Destination = "file"
+		cfg.App.Output.FilePath = *outputFile
+	}
+
+	// Output format override
+	if *outputFormat != "" {
+		cfg.App.Output.Format = *outputFormat
+	}
+
+	// Log level override
+	if *logLevel != "" {
+		switch *logLevel {
+		case "debug":
+			cfg.App.Log.Level = config.LogLevelDebug
+		case "info":
+			cfg.App.Log.Level = config.LogLevelInfo
+		case "warn":
+			cfg.App.Log.Level = config.LogLevelWarn
+		case "error":
+			cfg.App.Log.Level = config.LogLevelError
+		default:
+			log.Fatalf("Invalid log level: %s", *logLevel)
+		}
+	}
+
+	// Web server override
+	if *enableWeb {
+		cfg.Web.Enabled = true
+
+		if *webPort > 0 {
+			cfg.Web.Port = *webPort
+		}
+	}
+
+	// API server override
+	if *enableAPI {
+		cfg.API.Enabled = true
+
+		if *webPort > 0 {
+			cfg.API.Port = *webPort
+		}
+	}
+
+	// Source filter override
+	if *sourceFilter != "" {
+		// Implementation depends on how you want to filter sources
+		// For now, just log that we'd filter
+		log.Printf("Filtering sources: %s", *sourceFilter)
+		// TODO: Implement source filtering
+	}
+}
+
+// setupSignalHandling configures handling of OS signals for graceful shutdown
+func setupSignalHandling(cancel context.CancelFunc) {
+	c := make(chan os.Signal, 1)
+
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		sig := <-c
+		log.Printf("Received signal: %s. Shutting down...", sig)
+
+		// Call the cancel function to stop the context
+		cancel()
+
+		// Allow some time for graceful shutdown before forcing exit
+		time.Sleep(5 * time.Second)
+		os.Exit(1)
+	}()
+}
+
+// startWebServer initializes and starts the web interface server
+func startWebServer(cfg *config.Config, agg *aggregator.Aggregator) {
+	log.Printf("Starting web server on port %d...", cfg.Web.Port)
+	// TODO: Implement web server
+	log.Printf("Web server started on http://%s:%d", cfg.Web.Host, cfg.Web.Port)
+}
+
+// startAPIServer initializes and startss the API server
+func startAPIServer(cfg *config.Config, agg *aggregator.Aggregator) {
+	log.Printf("Starting API server on port %d...", cfg.API.Port)
+	// TODO: Implement API server
+	log.Printf("API server started on http://%s:%d", cfg.API.Host, cfg.API.Port)
+}
+
+// outputResults handles writing the aggregation results to the configured destination
+func outputResults(cfg *config.Config, results []aggregator.Result) error {
+	switch cfg.App.Output.Destination {
+	case "file":
+		if cfg.App.Output.FilePath == "" {
+			return fmt.Errorf("output file path is not set")
+		}
+		return aggregator.WriteResultsToFile(cfg.App.Output.FilePath, results, cfg.App.Output.Format)
+	case "stdout":
+		return aggregator.WriteResultsToStdout(results, cfg.App.Output.Format)
+	default:
+		return fmt.Errorf("unknown output destination: %s", cfg.App.Output.Destination)
 	}
 }

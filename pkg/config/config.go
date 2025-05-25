@@ -78,6 +78,7 @@ type FetcherConfig struct {
 type RateLimit struct {
 	Enabled           bool          `yaml:"enabled"`
 	RequestsPerMinute int           `yaml:"requests_per_minute"`
+	Burst             int           `yaml:"burst"`
 	BurstSize         int           `yaml:"burst_size"`
 	PerDomain         bool          `yaml:"per_domain"`
 	DefaultDelay      time.Duration `yaml:"default_delay"`
