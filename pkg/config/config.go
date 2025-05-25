@@ -48,6 +48,7 @@ type Config struct {
 	Output  OutputConfig  `yaml:"output"`
 	Logging LoggingConfig `yaml:"logging"`
 	Sources SourcesConfig `yaml:"sources"`
+	Web     WebConfig     `yaml:"web"`
 }
 
 // AppConfig contains general application settings
@@ -57,6 +58,7 @@ type AppConfig struct {
 	Debug       bool          `yaml:"debug"`
 	Timeout     time.Duration `yaml:"timeout"`
 	MaxRetries  int           `yaml:"max_retries"`
+	Output      OutputConfig  `yaml:"output"`
 }
 
 // FetcherConfig contains settings for the fetcher components
@@ -143,6 +145,14 @@ type LoggingConfig struct {
 type SourcesConfig struct {
 	Version int      `yaml:"version"`
 	Sources []Source `yaml:"sources"`
+}
+
+type WebConfig struct {
+	Enabled     bool   `yaml:"enabled"`
+	WebPort     int    `yaml:"port"`
+	WebHost     string `yaml:"host"`
+	StaticDir   string `yaml:"static_dir"`
+	TemplateDir string `yaml:"template_dir"`
 }
 
 // Source represents a single content source configuration
@@ -251,7 +261,7 @@ func DefaultConfig() *Config {
 }
 
 // LoadConfig loads configuration from a YAML file
-func LoadConfig(configPath string) (*Config, error) {
+func LoadConfig(configPath, sourcesPath string) (*Config, error) {
 	// Start with default configuration
 	config := DefaultConfig()
 
@@ -269,6 +279,16 @@ func LoadConfig(configPath string) (*Config, error) {
 	// Parse YAML
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("error parsing config file: %w", err)
+	}
+
+	// Load sources configuration if path is provided
+	if sourcesPath != "" {
+		sources, err := LoadSources(sourcesPath)
+		if err != nil {
+			return nil, fmt.Errorf("error loading sources configuration: %w", err)
+		}
+		// Merge sources configuration into main config
+		config.Sources = *sources
 	}
 
 	// Validate configuration
