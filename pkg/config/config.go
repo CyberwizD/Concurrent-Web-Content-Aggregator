@@ -40,16 +40,24 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// LogLevel constants for configuration
+const (
+	LogLevelDebug = "debug"
+	LogLevelInfo  = "info"
+	LogLevelWarn  = "warn"
+	LogLevelError = "error"
+)
+
 // Config represents the main application configuration
 type Config struct {
 	App     AppConfig     `yaml:"app"`
 	Fetcher FetcherConfig `yaml:"fetcher"`
 	Parser  ParserConfig  `yaml:"parser"`
 	Output  OutputConfig  `yaml:"output"`
-	Logging LoggingConfig `yaml:"logging"`
 	Sources SourcesConfig `yaml:"sources"`
 	Web     WebConfig     `yaml:"web"`
 	API     APIConfig     `yaml:"api"`
+	Logging LoggingConfig `yaml:"logging"`
 }
 
 // AppConfig contains general application settings
@@ -60,6 +68,7 @@ type AppConfig struct {
 	Timeout     time.Duration `yaml:"timeout"`
 	MaxRetries  int           `yaml:"max_retries"`
 	Output      OutputConfig  `yaml:"output"`
+	Log         LogConfig     `yaml:"logging"`
 }
 
 // FetcherConfig contains settings for the fetcher components
@@ -111,6 +120,12 @@ type OutputConfig struct {
 	Database    DatabaseConfig  `yaml:"database"`
 }
 
+type LogConfig struct {
+	Level  string `yaml:"level"`  // debug, info, warn, error
+	Format string `yaml:"format"` // text, json
+	File   string `yaml:"file"`   // log file path
+}
+
 // APIOutputConfig contains API output settings
 type APIOutputConfig struct {
 	Enabled  bool   `yaml:"enabled"`
@@ -136,7 +151,7 @@ type LoggingConfig struct {
 	Level      string `yaml:"level"`  // debug, info, warn, error
 	Format     string `yaml:"format"` // text, json
 	Output     string `yaml:"output"` // stdout, stderr, file
-	FilePath   string `yaml:"file_path"`
+	FilePath   string `yaml:"file"`
 	MaxSize    int    `yaml:"max_size"` // MB
 	MaxBackups int    `yaml:"max_backups"`
 	MaxAge     int    `yaml:"max_age"` // days

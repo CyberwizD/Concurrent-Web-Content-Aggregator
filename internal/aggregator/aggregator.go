@@ -10,3 +10,7 @@ type Aggregator struct {
 	Config      *config.Config
 	Results     []Result
 }
+
+func (a *Aggregator) New(cfg *config.Config, coord *coordinator.Coordinator) {
+
+}
