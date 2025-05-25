@@ -25,15 +25,15 @@ type Fetcher struct {
 }
 
 // Create content object
-type content struct {
-	Source      *model.Source
-	URL         *url.URL
-	Body        []byte
-	ContentType string
-	StatusCode  int
-	Headers     http.Header
-	FetchedAt   time.Time
-}
+// type content struct {
+// 	Source      *model.Source
+// 	URL         *url.URL
+// 	Body        []byte
+// 	ContentType string
+// 	StatusCode  int
+// 	Headers     http.Header
+// 	FetchedAt   time.Time
+// }
 
 // New creates a new Fetcher with the provided configuration
 func New(cfg *config.Config) (*Fetcher, error) {
@@ -148,50 +148,69 @@ func (f *Fetcher) checkRobotsTxt(ctx context.Context, parsedURL *url.URL, source
 	if !exists {
 		// Fetch robots.txt
 		req, err := http.NewRequestWithContext(ctx, "GET", robotsURL, nil)
-
 		if err != nil {
 			return true, fmt.Errorf("failed to create robots.txt request: %w", err)
 		}
 
-		// Set headers
-		req.Header.Set("User-Agent", f.config.App.HTTP.UserAgent)
+		// Use source-specific User-Agent if available, otherwise use default
+		userAgent := f.config.App.HTTP.UserAgent
+		if agent, ok := source.Headers["User-Agent"]; ok && agent != "" {
+			userAgent = agent
+		}
+		req.Header.Set("User-Agent", userAgent)
 
-		// Execute request
+		// Apply any other source-specific headers that might be relevant
+		for key, value := range source.Headers {
+			if key != "User-Agent" { // Skip User-Agent as it's already set
+				req.Header.Set(key, value)
+			}
+		}
+
+		// Execute request with rate limiting
+		err = f.rateLimiter.Wait(ctx, host)
+		if err != nil {
+			return true, fmt.Errorf("rate limit check failed for robots.txt: %w", err)
+		}
+
 		resp, err := f.client.Do(req)
-
 		if err != nil {
 			return true, fmt.Errorf("robots.txt request failed: %w", err)
 		}
-
 		defer resp.Body.Close()
 
-		// Check status code if robots.txt not found or error, allow access
+		// Check status code - if robots.txt not found or error, allow access
 		if resp.StatusCode >= 400 {
 			return true, nil
 		}
 
 		// Parse robots.txt
 		robotsTxt, err := robotstxt.FromResponse(resp)
-
 		if err != nil {
 			return true, fmt.Errorf("failed to parse robots.txt: %w", err)
 		}
 
 		// Cache the robots.txt data
-		f.robotsMu.RLock()
+		f.robotsMu.Lock()
 		f.robotsCache[host] = robotsTxt
 		robotsData = robotsTxt
-		f.robotsMu.RUnlock()
+		f.robotsMu.Unlock()
 	}
 
-	// Check if URL is allowed
+	// Check if URL is allowed using source-specific User-Agent
 	userAgent := f.config.App.HTTP.UserAgent
+	if agent, ok := source.Headers["User-Agent"]; ok && agent != "" {
+		userAgent = agent
+	}
 	group := robotsData.FindGroup(userAgent)
 	path := parsedURL.Path
-
 	if path == "" {
 		path = "/"
 	}
 
-	return group.Test(path), nil
+	allowed := group.Test(path)
+	if !allowed {
+		return false, fmt.Errorf("URL path '%s' is disallowed by robots.txt for User-Agent '%s'", path, userAgent)
+	}
+
+	return true, nil
 }
