@@ -62,15 +62,14 @@ type Config struct {
 
 // AppConfig contains general application settings
 type AppConfig struct {
-	Name        string `yaml:"name"`
-	Environment string `yaml:"environment"`
-	Debug       bool   `yaml:"debug"`
-	// Timeout     time.Duration `yaml:"timeout"`
-	MaxRetries int          `yaml:"max_retries"`
-	Timeouts   TimeConfig   `yaml:"timeouts"`
-	HTTP       HTTPConfig   `yaml:"http"`
-	Output     OutputConfig `yaml:"output"`
-	Log        LogConfig    `yaml:"logging"`
+	Name        string       `yaml:"name"`
+	Environment string       `yaml:"environment"`
+	Debug       bool         `yaml:"debug"`
+	MaxRetries  int          `yaml:"max_retries"`
+	Timeouts    TimeConfig   `yaml:"timeouts"`
+	HTTP        HTTPConfig   `yaml:"http"`
+	Output      OutputConfig `yaml:"output"`
+	Log         LogConfig    `yaml:"logging"`
 }
 
 // FetcherConfig contains settings for the fetcher components
@@ -230,8 +229,7 @@ func DefaultConfig() *Config {
 			Name:        "content-aggregator",
 			Environment: "development",
 			Debug:       false,
-			// Timeout:     30 * time.Second,
-			MaxRetries: 3,
+			MaxRetries:  3,
 			Timeouts: TimeConfig{
 				Request:    10 * time.Second,
 				Connection: 5 * time.Second,
