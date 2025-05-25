@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -107,4 +108,18 @@ func New(cfg *config.Config) (*Coordinator, error) {
 			StartTime:    time.Now(),
 		},
 	}, nil
+}
+
+// Start initializes and starts all worker pools and processing pipelines
+func (c *Coordinator) Start(ctx context.Context) error {
+	// Start fetcher workers
+
+	// Start Parser workers
+
+	return nil
+}
+
+func (c *Coordinator) Wait() error {
+
+	return nil
 }

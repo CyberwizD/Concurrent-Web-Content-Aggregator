@@ -36,19 +36,18 @@ func New(cfg *config.Config, coord *coordinator.Coordinator) (*Aggregator, error
 }
 
 func (a *Aggregator) Run(ctx context.Context) ([]Result, error) {
-	// Create a new aggregator instance
-	agg, err := New(coordinator.Config, coordinator.NewCoordinator())
-	if err != nil {
+	// Use the existing coordinator instance
+	if err := a.Coordinator.Start(ctx); err != nil {
 		return nil, err
 	}
 
 	// Start the coordinator
-	if err := agg.Coordinator.Start(ctx); err != nil {
+	if err := a.Coordinator.Start(ctx); err != nil {
 		return nil, err
 	}
 
 	// Wait for the coordinator to finish
-	if err := agg.Coordinator.Wait(); err != nil {
+	if err := a.Coordinator.Wait(); err != nil {
 		return nil, err
 	}
 
