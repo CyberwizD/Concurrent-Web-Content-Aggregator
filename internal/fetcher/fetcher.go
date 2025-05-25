@@ -62,7 +62,7 @@ func New(cfg *config.Config) (*Fetcher, error) {
 // Fetch retrieves content from the specified source
 func (f *Fetcher) Fetch(ctx context.Context, source *model.Source) (*model.Content, error) {
 	// Parse URL
-	parsedURL, err := url.Parse(source.URl)
+	parsedURL, err := url.Parse(source.URL)
 
 	if err != nil {
 		return nil, fmt.Errorf("invalid URL '%s': %w", source.URL, err)
@@ -76,7 +76,7 @@ func (f *Fetcher) Fetch(ctx context.Context, source *model.Source) (*model.Conte
 			log.Printf("Warning: Error checking robots.txt for %s: %v", parsedURL.Host, err)
 			// Continue anyway since it's just a warning
 		} else if !allowed {
-			return nil, fmt.Errorf("URL '%s' disallowed by robots.txt", sources.URL)
+			return nil, fmt.Errorf("URL '%s' disallowed by robots.txt", source.URL)
 		}
 	}
 
@@ -95,7 +95,7 @@ func (f *Fetcher) Fetch(ctx context.Context, source *model.Source) (*model.Conte
 	}
 
 	// Set headers
-	req.Header.Set("User-Agent", f.config.App.UserAgent)
+	req.Header.Set("User-Agent", f.config.App.HTTP.UserAgent)
 
 	for key, value := range source.Headers {
 		req.Header.Set(key, value)
@@ -124,7 +124,7 @@ func (f *Fetcher) Fetch(ctx context.Context, source *model.Source) (*model.Conte
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	return &content{
+	return &model.Content{
 		Source:      source,
 		URL:         source.URL,
 		Body:        body,
@@ -154,7 +154,7 @@ func (f *Fetcher) checkRobotsTxt(ctx context.Context, parsedURL *url.URL, source
 		}
 
 		// Set headers
-		req.Header.Set("User-Agent", config.App.HTTP.UserAgent)
+		req.Header.Set("User-Agent", f.config.App.HTTP.UserAgent)
 
 		// Execute request
 		resp, err := f.client.Do(req)
@@ -185,7 +185,7 @@ func (f *Fetcher) checkRobotsTxt(ctx context.Context, parsedURL *url.URL, source
 	}
 
 	// Check if URL is allowed
-	userAgent := f.App.HTTP.UserAgent
+	userAgent := f.config.App.HTTP.UserAgent
 	group := robotsData.FindGroup(userAgent)
 	path := parsedURL.Path
 
