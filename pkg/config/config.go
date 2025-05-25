@@ -62,13 +62,15 @@ type Config struct {
 
 // AppConfig contains general application settings
 type AppConfig struct {
-	Name        string        `yaml:"name"`
-	Environment string        `yaml:"environment"`
-	Debug       bool          `yaml:"debug"`
-	Timeout     time.Duration `yaml:"timeout"`
-	MaxRetries  int           `yaml:"max_retries"`
-	Output      OutputConfig  `yaml:"output"`
-	Log         LogConfig     `yaml:"logging"`
+	Name        string `yaml:"name"`
+	Environment string `yaml:"environment"`
+	Debug       bool   `yaml:"debug"`
+	// Timeout     time.Duration `yaml:"timeout"`
+	MaxRetries int          `yaml:"max_retries"`
+	Timeouts   TimeConfig   `yaml:"timeouts"`
+	HTTP       HTTPConfig   `yaml:"http"`
+	Output     OutputConfig `yaml:"output"`
+	Log        LogConfig    `yaml:"logging"`
 }
 
 // FetcherConfig contains settings for the fetcher components
@@ -108,6 +110,18 @@ type ParserConfig struct {
 	BufferSize           int                    `yaml:"buffer_size"`
 	Timeout              time.Duration          `yaml:"timeout"`
 	Selectors            map[string]interface{} `yaml:"selectors"` // CSS selectors for HTML parsing
+}
+
+type TimeConfig struct {
+	Request    time.Duration `yaml:"request"`    // Timeout for HTTP requests
+	Connection time.Duration `yaml:"connection"` // Connection timeout
+	Total      time.Duration `yaml:"total"`      // Total timeout for operations
+}
+
+type HTTPConfig struct {
+	UserAgent       string `yaml:"user_agent"`       // User-Agent header for HTTP requests
+	FollowRedirects bool   `yaml:"follow_redirects"` // Whether to follow HTTP redirects
+	MaxRedirects    int    `yaml:"max_redirects"`    // Maximum number of redirects to follow
 }
 
 // OutputConfig contains settings for output handling
@@ -216,8 +230,13 @@ func DefaultConfig() *Config {
 			Name:        "content-aggregator",
 			Environment: "development",
 			Debug:       false,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
+			// Timeout:     30 * time.Second,
+			MaxRetries: 3,
+			Timeouts: TimeConfig{
+				Request:    10 * time.Second,
+				Connection: 5 * time.Second,
+				Total:      60 * time.Second,
+			},
 		},
 		Fetcher: FetcherConfig{
 			MaxConcurrentWorkers: 10,
@@ -357,7 +376,7 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("app name cannot be empty")
 	}
 
-	if c.App.Timeout <= 0 {
+	if c.App.Timeouts.Request <= 0 {
 		return fmt.Errorf("app timeout must be positive")
 	}
 
