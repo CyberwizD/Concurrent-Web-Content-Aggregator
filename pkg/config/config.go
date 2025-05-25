@@ -49,6 +49,7 @@ type Config struct {
 	Logging LoggingConfig `yaml:"logging"`
 	Sources SourcesConfig `yaml:"sources"`
 	Web     WebConfig     `yaml:"web"`
+	API     APIConfig     `yaml:"api"`
 }
 
 // AppConfig contains general application settings
@@ -149,10 +150,17 @@ type SourcesConfig struct {
 
 type WebConfig struct {
 	Enabled     bool   `yaml:"enabled"`
-	WebPort     int    `yaml:"port"`
-	WebHost     string `yaml:"host"`
+	Port        int    `yaml:"port"`
+	Host        string `yaml:"host"`
 	StaticDir   string `yaml:"static_dir"`
 	TemplateDir string `yaml:"template_dir"`
+}
+
+type APIConfig struct {
+	Enabled bool   `yaml:"enabled"`
+	Port    int    `yaml:"port"`
+	Host    string `yaml:"host"`
+	RateLimit
 }
 
 // Source represents a single content source configuration
