@@ -12,6 +12,11 @@ import (
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/pkg/config"
 )
 
+var (
+	ErrInvalidConfig      = fmt.Errorf("invalid configuration")
+	ErrInvalidCoordinator = fmt.Errorf("invalid coordinator")
+)
+
 // Coordinator is the central component that manages concurrency and orchestrates
 // the fetching and parsing processes.
 type Coordinator struct {

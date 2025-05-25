@@ -8,9 +8,22 @@ import (
 type Aggregator struct {
 	Coordinator *coordinator.Coordinator
 	Config      *config.Config
-	Results     []Result
 }
 
-func (a *Aggregator) New(cfg *config.Config, coord *coordinator.Coordinator) {
+type Result struct {
+}
 
+func New(cfg *config.Config, coord *coordinator.Coordinator) (*Aggregator, error) {
+	if cfg == nil {
+		return nil, coordinator.ErrInvalidConfig
+	}
+
+	if coord == nil {
+		return nil, coordinator.ErrInvalidCoordinator
+	}
+
+	return &Aggregator{
+		Config:      cfg,
+		Coordinator: coord,
+	}, nil
 }
