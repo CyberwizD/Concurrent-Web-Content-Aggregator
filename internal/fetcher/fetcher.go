@@ -24,17 +24,6 @@ type Fetcher struct {
 	robotsMu    sync.RWMutex
 }
 
-// Create content object
-// type content struct {
-// 	Source      *model.Source
-// 	URL         *url.URL
-// 	Body        []byte
-// 	ContentType string
-// 	StatusCode  int
-// 	Headers     http.Header
-// 	FetchedAt   time.Time
-// }
-
 // New creates a new Fetcher with the provided configuration
 func New(cfg *config.Config) (*Fetcher, error) {
 	// Create HTTP client with configured timeouts

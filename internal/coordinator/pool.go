@@ -1,30 +1,37 @@
 package coordinator
 
 import (
-	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/fetcher"
-	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/parser"
+	"context"
+	"sync"
 )
 
+// WorkerFunc defines the signature for worker functions
+type WorkerFunc func(id int, ctx context.Context)
+
+// WorkerPool manages a pool of workers for concurrent processing
 type WorkerPool struct {
-	fetcher *fetcher.Fetcher
-	parser  *parser.Parser
+	size      int
+	name      string
+	wg        sync.WaitGroup
+	ctx       context.Context
+	cancel    context.CancelFunc
+	isRunning bool
+	mu        sync.Mutex
 }
 
-func NewWorkerPool(maxWorker int, WorkerType string) *WorkerPool {
-	var fetcher *fetcher.Fetcher
-	var parser *parser.Parser
-
-	switch WorkerType {
-	case "fetcher":
-		fetcher = fetcher.New()
-	case "parser":
-		parser = parser.New()
-	default:
-		return nil, ErrInvalidWorkerType
+// NewWorkerPool creates a new worker pool with the specified size
+func NewWorkerPool(size int, name string) *WorkerPool {
+	if size <= 0 {
+		size = 1 // Ensure at least one worker
 	}
 
 	return &WorkerPool{
-		fetcher: fetcher,
-		parser:  parser,
+		size: size,
+		name: name,
 	}
+}
+
+// Start initializes the worker pool and start all workers
+func (p *WorkerPool) Start(parentCtx context.Context, workerFn WorkerFunc) {
+
 }
