@@ -66,6 +66,7 @@ type AppConfig struct {
 	Environment string       `yaml:"environment"`
 	Debug       bool         `yaml:"debug"`
 	MaxRetries  int          `yaml:"max_retries"`
+	Concurrency ConConfig    `yaml:"concurrency"`
 	Timeouts    TimeConfig   `yaml:"timeouts"`
 	HTTP        HTTPConfig   `yaml:"http"`
 	Output      OutputConfig `yaml:"output"`
@@ -109,6 +110,11 @@ type ParserConfig struct {
 	BufferSize           int                    `yaml:"buffer_size"`
 	Timeout              time.Duration          `yaml:"timeout"`
 	Selectors            map[string]interface{} `yaml:"selectors"` // CSS selectors for HTML parsing
+}
+
+type ConConfig struct {
+	MaxFetchers int `yaml:"max_fetchers"`
+	MaxParsers  int `yaml:"max_parsers"`
 }
 
 type TimeConfig struct {
