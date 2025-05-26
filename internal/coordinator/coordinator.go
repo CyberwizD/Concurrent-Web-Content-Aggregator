@@ -42,7 +42,7 @@ type Coordinator struct {
 	stats *Stats
 
 	// Mutex for stats updates
-	mu sync.Mutexes
+	mu sync.Mutex
 }
 
 // Stats tracks statistics about the aggregation process
@@ -77,10 +77,10 @@ func New(cfg *config.Config) (*Coordinator, error) {
 		p, err := parser.Get(parseType)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to create parser for type %s: %v", parserType, err)
+			return nil, fmt.Errorf("failed to create parser for type %s: %v", parseType, err)
 		}
 
-		parsers[parseType] = p
+		parsers[parseType] = *p
 	}
 
 	// Create data channels
