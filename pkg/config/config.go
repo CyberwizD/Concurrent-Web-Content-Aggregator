@@ -58,6 +58,11 @@ type Config struct {
 	Web     WebConfig     `yaml:"web"`
 	API     APIConfig     `yaml:"api"`
 	Logging LoggingConfig `yaml:"logging"`
+
+	// Struct fields for testing purposes
+	Workers   int    `yaml:"workers"`
+	Interval  int    `yaml:"interval"`
+	OutputDir string `yaml:"output_dir"`
 }
 
 // AppConfig contains general application settings
