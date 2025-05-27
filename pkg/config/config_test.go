@@ -12,20 +12,22 @@ func TestLoadConfig(t *testing.T) {
 
 	mainConfig := filepath.Join(tmpDir, "config.yaml")
 	err := os.WriteFile(mainConfig, []byte(`
-workers: 5
-interval: 300
-output_dir: "./output"
-`), 0644)
+		workers: 5
+		interval: 300
+		output_dir: "./output"
+	`), 0644)
+
 	if err != nil {
 		t.Fatalf("Failed to create test config file: %v", err)
 	}
 
 	sourcesConfig := filepath.Join(tmpDir, "sources.yaml")
 	err = os.WriteFile(sourcesConfig, []byte(`
-- name: "Example Source"
-  url: "https://example.com"
-  type: "rss"
-`), 0644)
+		name: "Example Source"
+  		url: "https://example.com"
+  		type: "rss"
+	`), 0644)
+
 	if err != nil {
 		t.Fatalf("Failed to create test sources file: %v", err)
 	}
@@ -70,25 +72,29 @@ output_dir: "./output"
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg, err := LoadConfig(tt.configPath, tt.sourcesPath)
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if err != nil {
 				return
 			}
 
-			if len(cfg.Sources) != tt.checkSourceLen {
-				t.Errorf("LoadConfig() got %d sources, want %d", len(cfg.Sources), tt.checkSourceLen)
+			if len(cfg.Sources.Sources) != tt.checkSourceLen {
+				t.Errorf("LoadConfig() got %d sources, want %d", len(cfg.Sources.Sources), tt.checkSourceLen)
 			}
 
 			// Verify main config values
 			if cfg.Workers != 5 {
 				t.Errorf("LoadConfig() got Workers = %d, want 5", cfg.Workers)
 			}
+
 			if cfg.Interval != 300 {
 				t.Errorf("LoadConfig() got Interval = %d, want 300", cfg.Interval)
 			}
+
 			if cfg.OutputDir != "./output" {
 				t.Errorf("LoadConfig() got OutputDir = %s, want ./output", cfg.OutputDir)
 			}
