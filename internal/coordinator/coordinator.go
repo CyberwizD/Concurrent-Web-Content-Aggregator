@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -113,13 +114,124 @@ func New(cfg *config.Config) (*Coordinator, error) {
 // Start initializes and starts all worker pools and processing pipelines
 func (c *Coordinator) Start(ctx context.Context) error {
 	// Start fetcher workers
+	c.fetcherPool.Start(ctx, func(id int, ctx context.Context) {
+		c.fetchWorker(ctx, id)
+	})
 
 	// Start Parser workers
+	c.parserPool.Start(ctx, func(id int, ctx context.Context) {
+		c.parseWorker(ctx, id)
+	})
+
+	log.Printf("Coordinator started with %d fetchers and %d parsers",
+		c.config.App.Concurrency.MaxFetchers,
+		c.config.App.Concurrency.MaxParsers,
+	)
 
 	return nil
 }
 
+// Stop gracefully shuts down all worker pools
+func (c *Coordinator) Stop() {
+	// Stop worker pools
+	c.fetcherPool.Stop()
+	c.parserPool.Stop()
+
+	// Close channel
+	close(c.fetchJobs)
+	close(c.parseJobs)
+
+	// Update end time
+	c.mu.Lock()
+	c.stats.EndTime = time.Now()
+	c.mu.Unlock()
+
+	log.Printf("Coordinator stopped")
+}
+
 func (c *Coordinator) Wait() error {
+	// Wait for all fetch jobs to complete
+	go func() {
+		for job := range c.fetchResults {
+			c.mu.Lock()
+			if job.Error != nil {
+				c.stats.FailedFetches++
+				log.Printf("Fetch failed for %s: %v", job.Source.URL, job.Error)
+			} else {
+				c.stats.SuccessfulFetches++
+				c.stats.ProcessedSources++
+			}
+			c.mu.Unlock()
+		}
+	}()
+
+	// Wait for all parse jobs to complete
+	go func() {
+		for job := range c.parseResults {
+			c.mu.Lock()
+			if job.Error != nil {
+				c.stats.FailedParses++
+				log.Printf("Parse failed for %s: %v", job.Source.Name, job.Error)
+			} else {
+				c.stats.SuccessfulParses++
+			}
+			c.mu.Unlock()
+		}
+	}()
+
+	return nil
+}
+
+// GetStats returns a copy of the current statistics
+func (c *Coordinator) GetStats() Stats {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Create a copy to avoid race condition
+	statsCopy := *c.stats
+	return statsCopy
+}
+
+// SubmitFetchJob submits a source to be fetched
+func (c *Coordinator) SubmitFetchJob(source *model.Source) {
+	job := &model.FetchJob{
+		Source:      source,
+		SubmittedAt: time.Now(),
+	}
+
+	c.fetchJobs <- job
+}
+
+// GetFetchResults returns a channel for receiving fetch results
+func (c *Coordinator) GetFetchResults() <-chan *model.FetchResult {
+	return c.fetchResults
+}
+
+// GetParseResults returns a channel for receiving parse results
+func (c *Coordinator) GetParseResults() <-chan *model.ParseResult {
+	return c.parseResults
+}
+
+// fetchWorker processes fetch jobs from the fetch jobs channel
+func (c *Coordinator) fetchWorker(ctx context.Context, workerID int) {
+	log.Printf("Fetch worker %d started", workerID)
+
+}
+
+func (c *Coordinator) processFetchJob(ctx context.Context, job *model.FetchJob, workerID int) *model.FetchResult {
+	log.Printf("worker %d fetching from %s", workerID, job.Source.URL)
+
+	return nil
+}
+
+func (c *Coordinator) parseWorker(ctx context.Context, workerID int) {
+	log.Printf("Parse worker %d started", workerID)
+
+}
+
+func (c *Coordinator) processParseJob(ctx context.Context, job *model.ParseJob, workerID int) *model.ParseResult {
+	source := job.Source
+	log.Printf("worker %d parsing content from %s using %s parser", workerID, source.Name, source.Parser)
 
 	return nil
 }
