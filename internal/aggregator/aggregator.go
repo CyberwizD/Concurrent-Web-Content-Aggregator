@@ -36,11 +36,6 @@ func New(cfg *config.Config, coord *coordinator.Coordinator) (*Aggregator, error
 }
 
 func (a *Aggregator) Run(ctx context.Context) ([]Result, error) {
-	// Use the existing coordinator instance
-	if err := a.Coordinator.Start(ctx); err != nil {
-		return nil, err
-	}
-
 	// Start the coordinator
 	if err := a.Coordinator.Start(ctx); err != nil {
 		return nil, err
