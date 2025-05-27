@@ -149,6 +149,7 @@ func (c *Coordinator) Stop() {
 	log.Printf("Coordinator stopped")
 }
 
+// Wait blocks until all fetch and parse jobs are completed
 func (c *Coordinator) Wait() error {
 	// Wait for all fetch jobs to complete
 	go func() {
@@ -259,10 +260,38 @@ func (c *Coordinator) fetchWorker(ctx context.Context, workerID int) {
 	}
 }
 
+// processFetchJob handles the actual fetching of content
 func (c *Coordinator) processFetchJob(ctx context.Context, job *model.FetchJob, workerID int) *model.FetchResult {
 	log.Printf("worker %d fetching from %s", workerID, job.Source.URL)
 
-	return nil
+	// Create fetch-specific context with timeout
+	fetchCtx, cancel := context.WithTimeout(ctx, time.Duration(c.config.App.Timeouts.Request))
+	defer cancel()
+
+	// Fetch the content
+	content, err := c.fetcher.Fetch(fetchCtx, job.Source)
+
+	// Create result
+	result := &model.FetchResult{
+		Source:      job.Source,
+		Content:     content,
+		FetchedAt:   time.Now(),
+		ProcessedBy: workerID,
+		Error:       err,
+	}
+
+	// Update stats
+	c.mu.Lock()
+	if err != nil {
+		c.stats.FailedFetches++
+	} else {
+		c.stats.SuccessfulFetches++
+	}
+
+	c.stats.ProcessedSources = c.stats.SuccessfulFetches + c.stats.FailedFetches
+	c.mu.Unlock()
+
+	return result
 }
 
 func (c *Coordinator) parseWorker(ctx context.Context, workerID int) {
