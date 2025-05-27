@@ -216,6 +216,47 @@ func (c *Coordinator) GetParseResults() <-chan *model.ParseResult {
 func (c *Coordinator) fetchWorker(ctx context.Context, workerID int) {
 	log.Printf("Fetch worker %d started", workerID)
 
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("Fetch worker %d stopping: context cancelled", workerID)
+			return
+		case job, ok := <-c.fetchJobs:
+			if !ok {
+				log.Printf("Fetch worker %d stopping channel closed", workerID)
+				return
+			}
+
+			// Process the fetch job
+			result := c.processFetchJob(ctx, job, workerID)
+
+			// Send the result
+			select {
+			case c.fetchResults <- result:
+				// Result sent successfully
+			case <-ctx.Done():
+				log.Printf("Fetch worker %d: context cancelled while sending result", workerID)
+				return
+			}
+
+			// If fetch was successful, submit for parsing
+			if result.Error == nil && result.Content != nil {
+				parseJob := &model.ParseJob{
+					Source:      job.Source,
+					Content:     result.Content,
+					SubmittedAt: time.Now(),
+				}
+
+				select {
+				case c.parseJobs <- parseJob:
+					// Parse job submitted successfully
+				case <-ctx.Done():
+					log.Printf("Fetch worker %d: context cancelled while submitting parse job", workerID)
+					return
+				}
+			}
+		}
+	}
 }
 
 func (c *Coordinator) processFetchJob(ctx context.Context, job *model.FetchJob, workerID int) *model.FetchResult {
