@@ -2,8 +2,10 @@
 
 sources:
   # News website example
-  - name: tech_news
+  - id: news_aggregator
+    name: tech_news
     url: "https://example-tech-news.com/latest"
+    type: html
     enabled: true
     rate_limit:
       requests_per_minute: 30
@@ -22,8 +24,10 @@ sources:
       Accept-Language: "en-US,en;q=0.9"
   
   # Blog example
-  - name: tech_blog
+  - id: blog_aggregator
+    name: tech_blog
     url: "https://example-tech-blog.com/feed"
+    type: rss
     enabled: true
     rate_limit:
       requests_per_minute: 20
@@ -40,8 +44,10 @@ sources:
       Accept: "application/rss+xml,application/xml"
   
   # JSON API example
-  - name: product_api
+  - id: api_aggregator
+    name: product_api
     url: "https://example-product-api.com/v1/products"
+    type: json
     enabled: true
     rate_limit:
       requests_per_minute: 60
@@ -60,8 +66,10 @@ sources:
       Authorization: "Bearer ${API_KEY}"
   
   # Pagination example
-  - name: paginated_content
+  - id: paginated_aggregator
+    name: paginated_content
     url: "https://example-paginated.com/articles?page=${page}"
+    type: html
     enabled: true
     pagination:
       enabled: true
@@ -82,8 +90,10 @@ sources:
       Accept: "text/html"
   
   # Sitemap example
-  - name: sitemap_based
+  - id: sitemap_aggregator
+    name: sitemap_based
     url: "https://example-sitemap.com/sitemap.xml"
+    type: xml
     enabled: true
     sitemap:
       enabled: true
