@@ -1,7 +1,10 @@
 package parser
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/model"
 )
 
 type Parser struct {
@@ -50,5 +53,24 @@ func Get(parserType string) (*Parser, error) {
 		return &Parser{RssParser: &RssParser{}}, nil
 	default:
 		return nil, fmt.Errorf("unknown parser type: %s", parserType)
+	}
+}
+
+func (c *Parser) Parse(ctx context.Context, content *model.Content, source *model.Source) ([]model.Item, error) {
+	switch {
+	case c.HtmlParser != nil:
+		// TODO: Implement HTML parsing logic
+		return nil, fmt.Errorf("HTML parsing not implemented")
+	case c.JsonParser != nil:
+		// TODO: Implement JSON parsing logic
+		return nil, fmt.Errorf("JSON parsing not implemented")
+	case c.XmlParser != nil:
+		// TODO: Implement XML parsing logic
+		return nil, fmt.Errorf("XML parsing not implemented")
+	case c.RssParser != nil:
+		// TODO: Implement RSS parsing logic
+		return nil, fmt.Errorf("RSS parsing not implemented")
+	default:
+		return nil, fmt.Errorf("no parser available")
 	}
 }
