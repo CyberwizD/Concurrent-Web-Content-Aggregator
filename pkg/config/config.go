@@ -1,35 +1,3 @@
-// package config
-
-// import (
-// 	"fmt"
-// )
-
-// type Config struct {
-// 	// App configuration
-// 	App AppConfig `yaml:"app"`
-
-// 	// Sources configuration
-// 	Sources SourcesConfig `yaml:"sources"`
-
-// 	// Fetcher configuration
-// 	Fetcher FetcherConfig `yaml:"fetcher"`
-
-// 	// Parser configuration
-// 	Parser ParserConfig `yaml:"parser"`
-
-// 	// Aggregator configuration
-// 	Aggregator AggregatorConfig `yaml:"aggregator"`
-
-// 	// Output configuration
-// 	Output OutputConfig `yaml:"output"`
-
-// 	// Web configuration
-// 	Web WebConfig `yaml:"web"`
-// 	// Coordinator configuration
-// 	// API configuration
-// 	API APIConfig `yaml:"api"`
-// }
-
 package config
 
 import (
