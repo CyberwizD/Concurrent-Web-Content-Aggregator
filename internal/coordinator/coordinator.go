@@ -294,14 +294,79 @@ func (c *Coordinator) processFetchJob(ctx context.Context, job *model.FetchJob, 
 	return result
 }
 
+// parseWorker processes parse jobs from the parse jobs channel
 func (c *Coordinator) parseWorker(ctx context.Context, workerID int) {
 	log.Printf("Parse worker %d started", workerID)
 
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("Parse worker %d stopping: context cancelled", workerID)
+			return
+		case job, ok := <-c.parseJobs:
+			if !ok {
+				log.Printf("Parse worker %d stopping: channel closed", workerID)
+				return
+			}
+
+			// Process the parse job
+			result := c.processParseJob(ctx, job, workerID)
+
+			// Send the result
+			select {
+			case c.parseResults <- result:
+				// Result sent successfully
+			case <-ctx.Done():
+				log.Printf("Parse worker %d: context cancelled while sending result", workerID)
+				return
+			}
+		}
+	}
 }
 
+// processParseJob handles the actual parsing of content
 func (c *Coordinator) processParseJob(ctx context.Context, job *model.ParseJob, workerID int) *model.ParseResult {
 	source := job.Source
 	log.Printf("worker %d parsing content from %s using %s parser", workerID, source.Name, source.Parser)
 
-	return nil
+	// Get the appropriate parser
+	parser, exists := c.parsers[source.Parser]
+	if !exists {
+		err := fmt.Errorf("no parser available for type: %s", source.Parser)
+
+		// Update stats
+		c.mu.Lock()
+		c.stats.FailedParses++
+		c.mu.Unlock()
+
+		return &model.ParseResult{
+			Source:      source,
+			ParsedAt:    time.Now(),
+			ProcessedBy: workerID,
+			Error:       err,
+		}
+	}
+
+	// Parse the content
+	items, err := parser.Parse(ctx, job.Content, source)
+
+	// Create result
+	result := &model.ParseResult{
+		Source:      source,
+		Items:       items,
+		ParsedAt:    time.Now(),
+		ProcessedBy: workerID,
+		Error:       err,
+	}
+
+	// Update stats
+	c.mu.Lock()
+	if err != nil {
+		c.stats.FailedParses++
+	} else {
+		c.stats.SuccessfulParses++
+	}
+	c.mu.Unlock()
+
+	return result
 }
