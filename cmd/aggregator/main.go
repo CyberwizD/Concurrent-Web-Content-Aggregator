@@ -14,6 +14,7 @@ import (
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/aggregator"
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/coordinator"
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/pkg/config"
+	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/web"
 )
 
 var (
@@ -188,6 +189,14 @@ func setupSignalHandling(cancel context.CancelFunc) {
 // startWebServer initializes and starts the web interface server
 func startWebServer(cfg *config.Config, agg *aggregator.Aggregator) {
 	log.Printf("Starting web server on port %d...", cfg.Web.Port)
+
+	// Create a web server instance using the aggregator
+	webServer := web.NewServer(&cfg.Web, agg)
+
+	// Start the web server
+	if err := webServer.Start(); err != nil {
+		log.Printf("Web server error: %v", err)
+	}
 	// TODO: Implement web server
 	log.Printf("Web server started on http://%s:%d", cfg.Web.Host, cfg.Web.Port)
 }
@@ -195,6 +204,14 @@ func startWebServer(cfg *config.Config, agg *aggregator.Aggregator) {
 // startAPIServer initializes and startss the API server
 func startAPIServer(cfg *config.Config, agg *aggregator.Aggregator) {
 	log.Printf("Starting API server on port %d...", cfg.API.Port)
+
+	// Create an API server instance using the aggregator
+	apiServer := web.NewAPIServer(&cfg.API, agg)
+
+	// Start the API server
+	if err := apiServer.Start(); err != nil {
+		log.Printf("API server error: %v", err)
+	}
 	// TODO: Implement API server
 	log.Printf("API server started on http://%s:%d", cfg.API.Host, cfg.API.Port)
 }
