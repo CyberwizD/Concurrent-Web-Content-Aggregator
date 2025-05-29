@@ -8,10 +8,15 @@ import (
 )
 
 type Parser struct {
-	HtmlParser *HtmlParser
-	JsonParser *JsonParser
-	XmlParser  *XmlParser
-	RssParser  *RssParser
+	HtmlParser  *HtmlParser
+	JsonParser  *JsonParser
+	XmlParser   *XmlParser
+	RssParser   *RssParser
+	contentType string
+}
+
+func (p *Parser) GetContentType() string {
+	return p.contentType
 }
 
 type HtmlParser struct {
