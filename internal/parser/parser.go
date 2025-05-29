@@ -3,16 +3,27 @@ package parser
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/model"
 )
 
 type Parser struct {
-	HtmlParser  *HtmlParser
-	JsonParser  *JsonParser
-	XmlParser   *XmlParser
-	RssParser   *RssParser
+	HtmlParser *HtmlParser
+	JsonParser *JsonParser
+	XmlParser  *XmlParser
+	RssParser  *RssParser
+
+	content     string
 	contentType string
+	mu          sync.RWMutex
+}
+
+// GetContent returns the content of the parser
+func (p *Parser) GetContent() string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.content
 }
 
 func (p *Parser) GetContentType() string {
