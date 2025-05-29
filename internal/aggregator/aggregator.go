@@ -14,6 +14,7 @@ var ErrInvalidAggregator = errors.New("aggregator cannot be nil")
 type Aggregator struct {
 	Coordinator *coordinator.Coordinator
 	Config      *config.Config
+	Content     string
 }
 
 type Result struct {
