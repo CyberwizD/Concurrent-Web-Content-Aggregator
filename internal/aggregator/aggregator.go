@@ -2,10 +2,14 @@ package aggregator
 
 import (
 	"context"
+	"errors"
 
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/coordinator"
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/pkg/config"
 )
+
+// ErrInvalidAggregator is returned when an invalid aggregator is provided
+var ErrInvalidAggregator = errors.New("aggregator cannot be nil")
 
 type Aggregator struct {
 	Coordinator *coordinator.Coordinator
