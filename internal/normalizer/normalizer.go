@@ -37,6 +37,7 @@ func New(agg *aggregator.Aggregator) (*Normalizer, error) {
 	n.RegisterNormalizer("text", normalizeText)
 	n.RegisterNormalizer("html", normalizeHTML)
 	n.RegisterNormalizer("json", normalizeJSON) // Example for JSON, can be replaced with actual JSON normalization
+	n.RegisterNormalizer("rss", normalizeRSS)
 
 	return n, nil
 }
@@ -118,6 +119,23 @@ func normalizeJSON(p *parser.Parser) (*aggregator.Aggregator, error) {
 	// Simulate normalization process
 	normalizedContent := strings.TrimSpace(content)
 	log.Printf("Normalized JSON content: %s", normalizedContent)
+
+	// Create a new aggregator instance with the normalized content
+	return &aggregator.Aggregator{
+		Content: normalizedContent,
+	}, nil
+}
+
+func normalizeRSS(p *parser.Parser) (*aggregator.Aggregator, error) {
+	// Example normalization logic for RSS content
+	content := p.GetContent()
+	if content == "" {
+		return nil, fmt.Errorf("no content to normalize")
+	}
+
+	// Simulate normalization process
+	normalizedContent := strings.TrimSpace(content)
+	log.Printf("Normalized RSS content: %s", normalizedContent)
 
 	// Create a new aggregator instance with the normalized content
 	return &aggregator.Aggregator{
