@@ -2,7 +2,13 @@ package aggregator
 
 import (
 	"context"
+	"encoding/csv"
+	"encoding/json"
+	"encoding/xml"
 	"errors"
+	"fmt"
+	"html/template"
+	"os"
 
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/internal/coordinator"
 	"github.com/CyberwizD/Concurrent-Web-Content-Aggregator/pkg/config"
@@ -58,10 +64,73 @@ func (a *Aggregator) Run(ctx context.Context) ([]Result, error) {
 // WriteResultsToFile writes the aggregation results to a file in the specified format
 func WriteResultsToFile(filePath string, results []Result, format string) error {
 	// TODO: Implement file writing logic based on the format
+	f, err := os.Create(filePath)
+
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	switch format {
+	case "json":
+		encoder := json.NewEncoder(f)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(results)
+	case "csv":
+		writer := csv.NewWriter(f)
+		defer writer.Flush()
+		writer.Write([]string{"Content", "Error Count"})
+
+		for _, res := range results {
+			content := ""
+			if len(res.AggregatedContent) > 0 {
+				content = res.AggregatedContent[0] // simplified
+			}
+			writer.Write([]string{content, fmt.Sprintf("%d", len(res.Errors))})
+		}
+	case "xml":
+		encoder := xml.NewEncoder(f)
+		return encoder.Encode(results)
+	case "html":
+		tmpl := `<html><body><h1>Aggregated Results</h1>{{range .}}<p>{{index .AggregatedContent 0}}</p>{{end}}</body></html>`
+		t := template.Must(template.New("results").Parse(tmpl))
+		return t.Execute(f, results)
+	default:
+		return fmt.Errorf("unsupported format: %s", format)
+	}
+
 	return nil
 }
 
 func WriteResultsToStdout(results []Result, format string) error {
 	// TODO: Implement stdout writing logic based on the format
+	switch format {
+	case "json":
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(results)
+	case "csv":
+		writer := csv.NewWriter(os.Stdout)
+		defer writer.Flush()
+		writer.Write([]string{"Content", "Error Count"})
+		for _, res := range results {
+			content := ""
+			if len(res.AggregatedContent) > 0 {
+				content = res.AggregatedContent[0]
+			}
+			writer.Write([]string{content, fmt.Sprintf("%d", len(res.Errors))})
+		}
+	case "xml":
+		encoder := xml.NewEncoder(os.Stdout)
+		return encoder.Encode(results)
+	case "html":
+		tmpl := `<html><body><h1>Aggregated Results</h1>{{range .}}<p>{{index .AggregatedContent 0}}</p>{{end}}</body></html>`
+		t := template.Must(template.New("results").Parse(tmpl))
+		return t.Execute(os.Stdout, results)
+	default:
+		return fmt.Errorf("unsupported format: %s", format)
+	}
+
 	return nil
 }
