@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -16,7 +17,7 @@ type APIServer struct {
 type Server struct {
 	*http.Server
 	aggregator *aggregator.Aggregator
-	config     *config.WebConfig
+	// config     *config.WebConfig
 }
 
 func NewAPIServer(config *config.APIConfig, agg *aggregator.Aggregator) *APIServer {
@@ -28,7 +29,28 @@ func NewAPIServer(config *config.APIConfig, agg *aggregator.Aggregator) *APIServ
 
 func (s *APIServer) Start() error {
 	// TODO: Implement API server logic
-	return nil
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/api/results", func(w http.ResponseWriter, r *http.Request) {
+		results, err := s.aggregator.Run(r.Context())
+
+		if err != nil {
+			http.Error(w, "Failed to get results", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(results)
+	})
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", s.config.Port),
+		Handler: mux,
+	}
+
+	fmt.Printf("API server listening at %s\n", server.Addr)
+
+	return server.ListenAndServe()
 }
 
 func NewServer(cfg *config.WebConfig, agg *aggregator.Aggregator) *Server {
@@ -65,7 +87,8 @@ func NewServer(cfg *config.WebConfig, agg *aggregator.Aggregator) *Server {
 // Start initializes and starts the web server
 func (s *Server) Start() error {
 	// TODO: Implement actual web server logic
-	return nil
+	fmt.Printf("Starting web server at %s\n", s.Server.Addr)
+	return s.Server.ListenAndServe()
 }
 
 func (s *Server) Stop() error {
