@@ -4,7 +4,7 @@ sources:
   # News website example
   - id: news_aggregator
     name: tech_news
-    url: "https://example-tech-news.com/latest"
+    url: "https://news.ycombinator.com/"
     type: html
     enabled: true
     rate_limit:
@@ -26,7 +26,7 @@ sources:
   # Blog example
   - id: blog_aggregator
     name: tech_blog
-    url: "https://example-tech-blog.com/feed"
+    url: "https://hacklido.com/"
     type: rss
     enabled: true
     rate_limit:
